@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>앙스타 한섭 미래시 D-Day</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icon CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f7ff;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 14px 0 rgba(14, 165, 233, 0.08);
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen pb-12 flex flex-col">
+
+    <!-- Top Blue Header -->
+    <header class="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-600 text-white sticky top-0 z-30 shadow-sm">
+        <div class="max-w-md mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-calendar-check text-sky-200 text-lg"></i>
+                <h1 class="text-base font-bold tracking-tight">앙스타 미래시 D-Day</h1>
+            </div>
+            <span class="text-xs bg-sky-800/60 px-2 py-0.5 rounded-full text-sky-100 font-medium">한섭 기준</span>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-md mx-auto w-full px-4 pt-4 flex-1">
+
+        <!-- Search & Filter Controls -->
+        <div class="space-y-3 mb-4">
+            <!-- Search Bar -->
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400 text-sm"></i>
+                <input type="text" id="searchInput" oninput="renderSchedules()" placeholder="이벤트, 스카우트, 캐릭터 검색..." 
+                    class="w-full pl-9 pr-4 py-2.5 bg-white border border-sky-100 rounded-xl text-xs placeholder-slate-400 focus:outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+            </div>
+
+            <!-- Tab Filters -->
+            <div class="flex items-center justify-between gap-1.5 text-xs font-semibold">
+                <button onclick="setFilter('all')" id="filter-all" class="filter-btn flex-1 py-2 rounded-xl border border-sky-200 bg-sky-600 text-white shadow-2xs transition">
+                    전체 일정
+                </button>
+                <button onclick="setFilter('fav')" id="filter-fav" class="filter-btn flex-1 py-2 rounded-xl border border-sky-200 bg-white text-sky-800 transition flex items-center justify-center space-x-1">
+                    <i class="fa-solid fa-heart text-sky-500 text-[10px]"></i>
+                    <span>내 일정</span>
+                </button>
+                <button onclick="setFilter('event')" id="filter-event" class="filter-btn py-2 px-3 rounded-xl border border-sky-200 bg-white text-sky-800 transition">
+                    이벤트
+                </button>
+                <button onclick="setFilter('scout')" id="filter-scout" class="filter-btn py-2 px-3 rounded-xl border border-sky-200 bg-white text-sky-800 transition">
+                    스카우트
+                </button>
+            </div>
+        </div>
+
+        <!-- Schedule Card List Container -->
+        <div id="scheduleList" class="space-y-3">
+            <!-- Rendered via JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Banner & Detail View Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4" onclick="closeModalOnBg(event, 'detailModal')">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transition-all border border-sky-100 animate-in fade-in zoom-in duration-200">
+            <!-- Banner Image Section -->
+            <div class="relative bg-slate-100 h-40 overflow-hidden" id="detailBannerContainer">
+                <img id="detailBannerImg" src="" alt="일정 배너" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-transparent to-transparent"></div>
+                <button onclick="closeModal('detailModal')" class="absolute top-2.5 right-2.5 w-7 h-7 bg-slate-900/40 hover:bg-slate-900/70 text-white rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+                <span id="detailBadge" class="absolute bottom-2.5 left-2.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-md"></span>
+            </div>
+
+            <!-- Detail Information Body -->
+            <div class="p-4 space-y-3">
+                <div>
+                    <h3 id="detailTitle" class="text-base font-extrabold text-slate-800 mt-0.5 leading-snug"></h3>
+                </div>
+
+                <div class="space-y-2 border-t border-sky-100 pt-2.5">
+                    <!-- 5 Star Main Character -->
+                    <div class="bg-amber-50/80 border border-amber-100 rounded-lg p-2.5">
+                        <div class="flex items-center space-x-1 mb-1">
+                            <span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded">5★</span>
+                            <span class="text-[11px] font-bold text-amber-900">5성 메인 캐릭터</span>
+                        </div>
+                        <p id="detailMainChar" class="text-xs font-bold text-amber-950 pl-0.5"></p>
+                    </div>
+
+                    <!-- All Characters -->
+                    <div class="bg-sky-50/70 border border-sky-100 rounded-lg p-2.5">
+                        <div class="flex items-center space-x-1 mb-1">
+                            <i class="fa-solid fa-users text-sky-600 text-[10px]"></i>
+                            <span class="text-[11px] font-bold text-sky-900">전체 등장 캐릭터 (4★ / 3★ 포함)</span>
+                        </div>
+                        <p id="detailAllChar" class="text-xs font-medium text-slate-700 leading-relaxed pl-0.5"></p>
+                    </div>
+
+                    <!-- Schedule Dates -->
+                    <div class="text-xs pt-1">
+                        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                            <span class="text-xs text-slate-500 font-medium">한섭 예상 기간</span>
+                            <strong id="detailKrDate" class="text-sky-900 font-bold text-xs"></strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-1">
+                    <button onclick="closeModal('detailModal')" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition">
+                        닫기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Section -->
+    <script>
+        // krDate: 시작일, endDate: 종료일
+        var DEFAULT_PRESETS = [
+            {
+                id: "1",
+                type: "event",
+                title: "월드 투어 편 / AREA02 나이츠 VS 트릭스타",
+                mainChar: "츠키나가 레오",
+                allChar: "츠키나가 레오, 이사라 마오, 아케호시 스바루, 사쿠마 리츠",
+                krDate: "2026-11-07",
+                endDate: "2026-11-15",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "2",
+                type: "scout",
+                title: "호전의 기사 와 기책의 별",
+                mainChar: "유우키 마코토",
+                allChar: "유우키 마코토, 세나 이즈미, 히다카 호쿠토, 스오우 츠카사, 나루카미 아라시",
+                krDate: "2026-11-06",
+                endDate: "2026-11-20",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "3",
+                type: "scout",
+                title: "피처 스카우트 소마 편 3",
+                mainChar: "칸자키 소마",
+                allChar: "칸자키 소마, 타키 이부키, 카제하야 타츠미",
+                krDate: "2026-11-02",
+                endDate: "2026-11-16",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "4",
+                type: "event",
+                title: "시련! 나를 위한 Golden Dream",
+                mainChar: "사자나미 쥰",
+                allChar: "사자나미 쥰, 토모에 히요리, 사에구사 이바라, 란 나기사",
+                krDate: "2026-11-21",
+                endDate: "2026-11-29",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "5",
+                type: "scout",
+                title: "하지 밤바람",
+                mainChar: "사카사키 나츠메",
+                allChar: "사카사키 나츠메, 키류 쿠로, 쿠온 마슈, 세나 이즈미",
+                krDate: "2026-11-20",
+                endDate: "2026-12-04",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "6",
+                type: "scout",
+                title: "피처 스카우트 츠무기 편 3",
+                mainChar: "아오바 츠무기",
+                allChar: "아오바 츠무기, 사에구사 이바라, 하나무라 후유메",
+                krDate: "2026-11-16",
+                endDate: "2026-11-30",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "7",
+                type: "event",
+                title: "월드 투어 편 / AREA03 에스프리 VS 라빗츠",
+                mainChar: "시노 하지메",
+                allChar: "시노 하지메, 나츠 칸나, 마시로 토모야, 사기리 에스",
+                krDate: "2026-12-05",
+                endDate: "2026-12-13",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "8",
+                type: "scout",
+                title: "일각수 왕자와 가능성의 토끼",
+                mainChar: "히나타 아오이",
+                allChar: "히나타 아오이, 나루카미 아라시, 테마 미츠루, 츠키나가 레오",
+                krDate: "2026-12-04",
+                endDate: "2026-12-18",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "9",
+                type: "scout",
+                title: "피처 스카우트 슈 편 3",
+                mainChar: "이츠키 슈",
+                allChar: "이츠키 슈, 아오바 츠무기, 모로보시 코가",
+                krDate: "2026-11-30",
+                endDate: "2026-12-14",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "10",
+                type: "event",
+                title: "소용돌이★튀어나오는 월드",
+                mainChar: "아오이 히나타",
+                allChar: "아오이 히나타, 아오이 유우타, 오토가리 아도니스, 키류 쿠로",
+                krDate: "2026-12-19",
+                endDate: "2026-12-27",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "11",
+                type: "scout",
+                title: "스카우트! Lo-Fi BEATS",
+                mainChar: "세나 이즈미",
+                allChar: "세나 이즈미, 마시로 토모야, 시이나 니키, 아오바 츠무기",
+                krDate: "2026-12-18",
+                endDate: "2027-01-01",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "12",
+                type: "scout",
+                title: "피처 스카우트 아이라 편 3",
+                mainChar: "시라토리 아이라",
+                allChar: "시라토리 아이라, 하나무라 츠무기, 신카이 카나타",
+                krDate: "2026-12-14",
+                endDate: "2026-12-28",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "13",
+                type: "event",
+                title: "월드 투어 편 / AREA04 발키리 VS 발키리",
+                mainChar: "카게히라 미카",
+                allChar: "카게히라 미카, 이츠키 슈, 미도카 노조미",
+                krDate: "2027-01-02",
+                endDate: "2027-01-10",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "14",
+                type: "scout",
+                title: "스카우트! 녹아내리는 신비와 기교의 발키리",
+                mainChar: "쿠로 미츠루",
+                allChar: "쿠로 미츠루, 아오바 츠무기, 츠키나가 레오",
+                krDate: "2027-01-01",
+                endDate: "2027-01-15",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "15",
+                type: "scout",
+                title: "피처 스카우트 케이토 편 3",
+                mainChar: "하스미 케이토",
+                allChar: "하스미 케이토, 미케지마 마다라, 아야세 마요이",
+                krDate: "2026-12-28",
+                endDate: "2027-01-11",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "16",
+                type: "event",
+                title: "Coolside♥꾸밈없는 석양 네이키드",
+                mainChar: "엔조지 카누",
+                allChar: "엔조지 카누, 모리사와 치아키, 신카이 카나타, 타카미네 미도리, 나구모 테토라",
+                krDate: "2027-01-16",
+                endDate: "2027-01-24",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "17",
+                type: "scout",
+                title: "스카우트! Ambassador / 마다라카",
+                mainChar: "타카미네 미도리",
+                allChar: "타카미네 미도리, 아케호시 스바루, 후시미 유즈루, 사기모리 에이스",
+                krDate: "2027-01-15",
+                endDate: "2027-01-29",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "18",
+                type: "scout",
+                title: "피처 스카우트 리츠 편 3",
+                mainChar: "사쿠마 리츠",
+                allChar: "사쿠마 리츠, 후시미 유즈루, 사기모리 에이스",
+                krDate: "2027-01-11",
+                endDate: "2027-01-25",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "19",
+                type: "event",
+                title: "월드 투어 편 / AREA05 알몸 VS 스위치",
+                mainChar: "아오바 츠무기",
+                allChar: "아오바 츠무기, 아마기 히이로, 아야세 마요이, 하루카와 소라",
+                krDate: "2027-01-30",
+                endDate: "2027-02-07",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "20",
+                type: "scout",
+                title: "스카우트! 트릭스터 방랑과 협곡의 마법사",
+                mainChar: "시라토리 아이라",
+                allChar: "시라토리 아이라, 사카사키 나츠메, 카제하야 타츠미",
+                krDate: "2027-01-29",
+                endDate: "2027-02-12",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "21",
+                type: "scout",
+                title: "피처 스카우트 마다라 편 3",
+                mainChar: "미케지마 마다라",
+                allChar: "미케지마 마다라, 카제하야 타츠미, 토모에 히요리",
+                krDate: "2027-01-26",
+                endDate: "2027-02-08",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "22",
+                type: "event",
+                title: "잔흔◆집착, 추적, 펑클럽",
+                mainChar: "오토가리 코가",
+                allChar: "오토가리 코가, 오토가리 아도니스, 란나기 사다무, 사쿠마 레이",
+                krDate: "2027-02-13",
+                endDate: "2027-02-21",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "23",
+                type: "scout",
+                title: "스카우트! [MEME:iD",
+                mainChar: "오우카와 코하쿠",
+                allChar: "오우카와 코하쿠, 아야세 마요이, 시노 하지메, 츠키나가 레오",
+                krDate: "2027-02-12",
+                endDate: "2027-02-26",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "24",
+                type: "scout",
+                title: "피처 스카우트 스바루 편 3",
+                mainChar: "아케호시 스바루",
+                allChar: "아케호시 스바루, 하루카와 소라, 텐쇼인 에이치",
+                krDate: "2027-02-08",
+                endDate: "2027-02-22",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "25",
+                type: "event",
+                title: "월드 투어 편 / AREA06 마무 VS 피네",
+                mainChar: "미케지마 마다라",
+                allChar: "미케지마 마다라, 후시미 유즈루, 히비키 와타루",
+                krDate: "2027-02-27",
+                endDate: "2027-03-07",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "26",
+                type: "scout",
+                title: "스카우트! 어머나 길은 미궁 천사의 연주자",
+                mainChar: "텐쇼인 에이치",
+                allChar: "텐쇼인 에이치, 미케지마 마다라, 히메미야 토리",
+                krDate: "2027-02-26",
+                endDate: "2027-03-12",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "27",
+                type: "scout",
+                title: "피처 스카우트 히메루 편 3",
+                mainChar: "HiMERU",
+                allChar: "HiMERU, 테마 미츠루, 칸자키 소마",
+                krDate: "2027-02-22",
+                endDate: "2027-03-08",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "28",
+                type: "event",
+                title: "익애★어둠과 라임니트",
+                mainChar: "츠키나가 레오",
+                allChar: "츠키나가 레오, 하나무라 츠무기, 사기모리 에스, 나루카미 아라시",
+                krDate: "2027-03-13",
+                endDate: "2027-03-21",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "29",
+                type: "scout",
+                title: "스카우트! Ambassador / 석도약",
+                mainChar: "아라시 미카",
+                allChar: "아라시 미카, 신카이 카나타, 아오이 유우타, 마시로 토모야",
+                krDate: "2027-03-12",
+                endDate: "2027-03-26",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "30",
+                type: "scout",
+                title: "피처 스카우트 츠카사 편 3",
+                mainChar: "스오우 츠카사",
+                allChar: "스오우 츠카사, 시이나 니키, 마마하 네네",
+                krDate: "2027-03-08",
+                endDate: "2027-03-22",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "31",
+                type: "event",
+                title: "월드 투어 편 / AREA07 유성대 VS 유성대",
+                mainChar: "타카미네 미도리",
+                allChar: "타카미네 미도리, 아오이 히나타, 신카이 카나타, 모리사와 치아키",
+                krDate: "2027-03-27",
+                endDate: "2027-04-04",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "32",
+                type: "scout",
+                title: "스카우트! 반짝이는 방성과 티샷 유성",
+                mainChar: "아오이 유우타",
+                allChar: "아오이 유우타, 나구모 테토라, 센고쿠 시노부",
+                krDate: "2027-03-26",
+                endDate: "2027-04-09",
+                banner: "",
+                isFav: false
+            },
+            {
+                id: "33",
+                type: "scout",
+                title: "피처 스카우트 나가요시 편 3",
+                mainChar: "렌 나가요시",
+                allChar: "렌 나가요시, 미도카 노조미, 유우키 마코토",
+                krDate: "2027-03-22",
+                endDate: "2027-04-05",
+                banner: "",
+                isFav: false
+            }
+        ];
+
+        var schedules = [];
+        var activeFilter = 'all';
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadLocalStorageData();
+            renderSchedules();
+        });
+
+        function loadLocalStorageData() {
+            var savedSchedules = localStorage.getItem('enstar_simple_dday_v6');
+            if (savedSchedules) {
+                try {
+                    schedules = JSON.parse(savedSchedules);
+                } catch(e) {
+                    schedules = DEFAULT_PRESETS;
+                }
+            } else {
+                schedules = DEFAULT_PRESETS;
+            }
+        }
+
+        function saveLocalStorageData() {
+            localStorage.setItem('enstar_simple_dday_v6', JSON.stringify(schedules));
+        }
+
+        // 시작일과 종료일을 정확히 계산해서 상태값 구함
+        function calculateDDay(startDateStr, endDateStr) {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            var start = new Date(startDateStr);
+            start.setHours(0, 0, 0, 0);
+
+            var end = endDateStr ? new Date(endDateStr) : start;
+            end.setHours(0, 0, 0, 0);
+
+            // 1. 시작 전 (오늘 < 시작일)
+            if (today < start) {
+                var diffTime = start - today;
+                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                var badgeClass = 'bg-sky-500 text-white';
+                if (diffDays <= 7) badgeClass = 'bg-blue-600 text-white font-black';
+                return { text: 'D-' + diffDays, status: 'future', badgeClass: badgeClass };
+            } 
+            // 2. 진행 중 (시작일 <= 오늘 <= 종료일)
+            else if (today >= start && today <= end) {
+                var diffTime = end - today;
+                var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                var text = diffDays === 0 ? '오늘 종료' : '진행 중 (D-' + diffDays + ')';
+                return { text: text, status: 'active', badgeClass: 'bg-emerald-500 text-white font-bold' };
+            } 
+            // 3. 종료됨 (오늘 > 종료일)
+            else {
+                return { text: '종료', status: 'past', badgeClass: 'bg-slate-200 text-slate-500' };
+            }
+        }
+
+        function setFilter(filterType) {
+            activeFilter = filterType;
+            var buttons = document.querySelectorAll('.filter-btn');
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('bg-sky-600', 'text-white', 'shadow-2xs');
+                buttons[i].classList.add('bg-white', 'text-sky-800', 'border-sky-200');
+            }
+            
+            var activeBtn = document.getElementById('filter-' + filterType);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-sky-800', 'border-sky-200');
+                activeBtn.classList.add('bg-sky-600', 'text-white', 'shadow-2xs');
+            }
+
+            renderSchedules();
+        }
+
+        function renderSchedules() {
+            var listContainer = document.getElementById('scheduleList');
+            var searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            var filtered = schedules.filter(function(item) {
+                if (activeFilter === 'fav' && !item.isFav) return false;
+                if (activeFilter === 'event' && item.type !== 'event') return false;
+                if (activeFilter === 'scout' && item.type !== 'scout') return false;
+
+                if (searchQuery) {
+                    var matchTitle = item.title.toLowerCase().indexOf(searchQuery) !== -1;
+                    var matchMain = (item.mainChar || '').toLowerCase().indexOf(searchQuery) !== -1;
+                    var matchAll = (item.allChar || '').toLowerCase().indexOf(searchQuery) !== -1;
+                    return matchTitle || matchMain || matchAll;
+                }
+                return true;
+            });
+
+            filtered.sort(function(a, b) {
+                return new Date(a.krDate) - new Date(b.krDate);
+            });
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = 
+                    '<div class="text-center py-10 bg-white rounded-xl border border-sky-100">' +
+                    '   <i class="fa-solid fa-calendar-xmark text-2xl text-sky-200 mb-2"></i>' +
+                    '   <p class="text-xs text-slate-400 font-medium">조건에 맞는 일정이 없습니다.</p>' +
+                    '</div>';
+                return;
+            }
+
+            var htmlContent = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var item = filtered[i];
+                var dday = calculateDDay(item.krDate, item.endDate);
+                var isEvent = item.type === 'event';
+                var tagColor = isEvent ? 'bg-sky-100 text-sky-800' : 'bg-blue-100 text-blue-800';
+                var tagLabel = isEvent ? '이벤트' : '스카우트';
+                var mainCharacter = item.mainChar || '미정';
+                var heartIcon = item.isFav ? 'fa-solid text-sky-500' : 'fa-regular text-slate-300';
+                var dateRangeText = item.endDate ? item.krDate + ' ~ ' + item.endDate : item.krDate;
+
+                htmlContent += 
+                    '<div onclick="openDetailModal(\'' + item.id + '\')" class="bg-white rounded-xl p-3.5 card-shadow border border-sky-100/70 hover:border-sky-300 transition-all cursor-pointer active:scale-[0.99]">' +
+                        '<div class="flex justify-between items-center mb-1.5">' +
+                            '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md ' + tagColor + '">' +
+                                tagLabel +
+                            '</span>' +
+                            '<div class="flex items-center space-x-2">' +
+                                '<span class="text-xs font-bold px-2.5 py-0.5 rounded-full ' + dday.badgeClass + '">' +
+                                    dday.text +
+                                '</span>' +
+                                '<button onclick="event.stopPropagation(); toggleFav(\'' + item.id + '\')" class="text-base px-1 text-sky-400 hover:text-sky-600 transition">' +
+                                    '<i class="' + heartIcon + ' fa-heart"></i>' +
+                                '</button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="my-1.5 flex items-center justify-between">' +
+                            '<div class="pr-2 truncate">' +
+                                '<h4 class="text-sm font-bold text-slate-800 truncate">' + item.title + '</h4>' +
+                                '<p class="text-xs text-amber-700 font-medium truncate mt-0.5"><span class="bg-amber-100 text-amber-800 text-[9px] font-extrabold px-1 py-0.2 rounded mr-1">5★</span>' + mainCharacter + '</p>' +
+                            '</div>' +
+                            '<i class="fa-solid fa-chevron-right text-xs text-sky-300"></i>' +
+                        '</div>' +
+                        '<div class="bg-sky-50/70 rounded-lg px-2.5 py-1.5 mt-2 flex items-center justify-between text-[11px] text-slate-600">' +
+                            '<span>기간: <strong class="text-sky-900">' + dateRangeText + '</strong></span>' +
+                        '</div>' +
+                    '</div>';
+            }
+
+            listContainer.innerHTML = htmlContent;
+        }
+
+        function openDetailModal(id) {
+            var item = null;
+            for (var i = 0; i < schedules.length; i++) {
+                if (schedules[i].id === id) {
+                    item = schedules[i];
+                    break;
+                }
+            }
+            if (!item) return;
+
+            var dday = calculateDDay(item.krDate, item.endDate);
+            var bannerContainer = document.getElementById('detailBannerContainer');
+            var bannerImg = document.getElementById('detailBannerImg');
+
+            if (item.banner && item.banner.trim() !== "") {
+                bannerImg.src = item.banner;
+                bannerContainer.style.display = 'block';
+            } else {
+                bannerContainer.style.display = 'none';
+            }
+
+            var dateRangeText = item.endDate ? item.krDate + ' ~ ' + item.endDate : item.krDate;
+
+            document.getElementById('detailTitle').innerText = item.title;
+            document.getElementById('detailKrDate').innerText = dateRangeText;
+            document.getElementById('detailMainChar').innerText = item.mainChar || '정보 없음';
+            document.getElementById('detailAllChar').innerText = item.allChar || item.mainChar || '정보 없음';
+
+            var badge = document.getElementById('detailBadge');
+            badge.innerText = dday.text;
+            badge.className = 'absolute bottom-2.5 left-2.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-md ' + dday.badgeClass;
+
+            openModal('detailModal');
+        }
+
+        function toggleFav(id) {
+            for (var i = 0; i < schedules.length; i++) {
+                if (schedules[i].id === id) {
+                    schedules[i].isFav = !schedules[i].isFav;
+                    break;
+                }
+            }
+            saveLocalStorageData();
+            renderSchedules();
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function closeModalOnBg(e, modalId) {
+            if (e.target.id === modalId) {
+                closeModal(modalId);
+            }
+        }
+    </script>
+</body>
+</html>
